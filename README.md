@@ -26,5 +26,5 @@ node app.test.js
 
 ## GitHub Pages
 
-This repo is ready for GitHub Pages. Publish the `main` branch root and the site will be served as a static app.
+Visit site at https://svanny.github.io/varsep-investment-plotter/
 
