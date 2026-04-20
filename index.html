@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'none'; upgrade-insecure-requests">
+    <title>Investment Calculator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js" integrity="sha384-b0GXujLkk9eYYSmcSfoyZbfyElGAQnDyY0skCHSG6w3JgTMFnz11ggrTAr7seu9f" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js" integrity="sha384-3N9GHhCtN3CQef6tNfqgZlv7sQLYIkcChN+uaTZ7xVdzKYp/SjBNPxa92+hM7EAY" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="header__title">Investment Calculator</h1>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                <svg class="theme-icon theme-icon--light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <svg class="theme-icon theme-icon--dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+        </header>
+
+        <!-- Tab Navigation -->
+        <nav class="tabs-nav" role="tablist">
+            <button class="tab-btn tab-btn--active" data-tab="calculator" role="tab" aria-selected="true" aria-controls="calculator-tab">
+                Calculator
+            </button>
+            <button class="tab-btn" data-tab="comparison" role="tab" aria-selected="false" aria-controls="comparison-tab">
+                Comparison
+            </button>
+        </nav>
+
+        <!-- Calculator Tab Content -->
+        <div id="calculator-tab" class="tab-content" role="tabpanel">
+            <!-- Chart Error Message (hidden by default) -->
+            <div id="chartError" class="chart-error" style="display: none;">
+                <p>Charts could not be loaded. Please check your internet connection and refresh the page.</p>
+            </div>
+
+            <!-- Input Section -->
+            <section class="input-section">
+                <h2 class="section-title">Investment Parameters</h2>
+
+                <div class="input-grid">
+                    <!-- Initial Investment -->
+                    <div class="form-group">
+                        <label class="form-label" for="initialInvestment">Initial Investment</label>
+                        <div class="input-wrapper">
+                            <span class="input-prefix">$</span>
+                            <input type="text" id="initialInvestment" class="form-control currency-input">
+                        </div>
+                        <div class="input-error" id="initialInvestmentError"></div>
+                    </div>
+
+                    <!-- Number of Years -->
+                    <div class="form-group">
+                        <label class="form-label" for="years">Investment Period (Years)</label>
+                        <div class="slider-group">
+                            <input type="range" id="yearsSlider" class="slider">
+                            <input type="number" id="years" class="form-control slider-input">
+                        </div>
+                        <div class="input-error" id="yearsError"></div>
+                    </div>
+
+                    <!-- Annual Growth Rate -->
+                    <div class="form-group">
+                        <label class="form-label" for="growthRate">Annual Growth Rate (%)</label>
+                        <div class="slider-group">
+                            <input type="range" id="growthRateSlider" class="slider">
+                            <input type="number" id="growthRate" class="form-control slider-input">
+                        </div>
+                        <div class="input-error" id="growthRateError"></div>
+                    </div>
+
+                    <!-- Performance Fee -->
+                    <div class="form-group">
+                        <label class="form-label" for="performanceFee">
+                            Performance Fee (OCF %)
+                            <button class="tooltip-trigger" aria-label="Performance fee explanation">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M9,9a3,3,0,1,1,4,2.75V15"></path>
+                                    <path d="M12,17h.01"></path>
+                                </svg>
+                                <span class="tooltip">Annual fund management fee deducted from your balance each period.</span>
+                            </button>
+                        </label>
+                        <div class="slider-group">
+                            <input type="range" id="performanceFeeSlider" class="slider">
+                            <input type="number" id="performanceFee" class="form-control slider-input">
+                        </div>
+                        <div class="input-error" id="performanceFeeError"></div>
+                    </div>
+
+                    <!-- Inflation Rate -->
+                    <div class="form-group">
+                        <label class="form-label" for="inflationRate">
+                            Inflation Rate (%)
+                            <button class="tooltip-trigger" aria-label="Inflation rate explanation">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M9,9a3,3,0,1,1,4,2.75V15"></path>
+                                    <path d="M12,17h.01"></path>
+                                </svg>
+                                <span class="tooltip">Expected annual inflation rate to calculate real (inflation-adjusted) returns.</span>
+                            </button>
+                        </label>
+                        <div class="slider-group">
+                            <input type="range" id="inflationRateSlider" class="slider">
+                            <input type="number" id="inflationRate" class="form-control slider-input">
+                        </div>
+                        <div class="input-error" id="inflationRateError"></div>
+                    </div>
+
+                    <!-- Tax Rate -->
+                    <div class="form-group">
+                        <label class="form-label" for="taxRate">
+                            Tax Rate on Gains (%)
+                            <button class="tooltip-trigger" aria-label="Tax rate explanation">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M9,9a3,3,0,1,1,4,2.75V15"></path>
+                                    <path d="M12,17h.01"></path>
+                                </svg>
+                                <span class="tooltip">Capital gains tax rate applied to investment returns (e.g., 15-20% for long-term gains).</span>
+                            </button>
+                        </label>
+                        <div class="slider-group">
+                            <input type="range" id="taxRateSlider" class="slider">
+                            <input type="number" id="taxRate" class="form-control slider-input">
+                        </div>
+                        <div class="input-error" id="taxRateError"></div>
+                    </div>
+
+                    <!-- Contribution Frequency -->
+                    <div class="form-group">
+                        <label class="form-label" for="contributionFrequency">Contribution Frequency</label>
+                        <select id="contributionFrequency" class="form-control">
+                        </select>
+                    </div>
+
+                    <!-- Contribution Amount -->
+                    <div class="form-group">
+                        <label class="form-label" for="contributionAmount">Contribution Amount (per period)</label>
+                        <div class="input-wrapper">
+                            <span class="input-prefix">$</span>
+                            <input type="text" id="contributionAmount" class="form-control currency-input">
+                        </div>
+                        <div class="input-error" id="contributionAmountError"></div>
+                    </div>
+
+                    <!-- Compounding Toggle -->
+                    <div class="form-group">
+                        <label class="form-label">Compounding</label>
+                        <div class="toggle-wrapper">
+                            <input type="checkbox" id="compounding" class="toggle-input">
+                            <label for="compounding" class="toggle-label">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-text">Reinvest returns</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Withdrawal Mode -->
+                    <div class="form-group">
+                        <label class="form-label" for="withdrawalMode">Withdrawal Mode</label>
+                        <select id="withdrawalMode" class="form-control">
+                        </select>
+                    </div>
+
+                    <!-- Withdrawal Value -->
+                    <div class="form-group" id="withdrawalValueGroup" style="display: none;">
+                        <label class="form-label" for="withdrawalValue">Withdrawal Value</label>
+                        <div class="input-wrapper">
+                            <span class="input-prefix" id="withdrawalPrefix">$</span>
+                            <input type="text" id="withdrawalValue" class="form-control currency-input">
+                        </div>
+                        <div class="input-error" id="withdrawalValueError"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Summary Cards -->
+            <section class="summary-section">
+                <h2 class="section-title">Investment Summary</h2>
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <div class="summary-card__label">Final Balance</div>
+                        <div class="summary-card__value" id="finalBalance">$0.00</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-card__label">Real Value (Inflation Adj.)</div>
+                        <div class="summary-card__value" id="realValue">$0.00</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-card__label">Total Interest</div>
+                        <div class="summary-card__value" id="totalInterest">$0.00</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-card__label">Total Taxes</div>
+                        <div class="summary-card__value" id="totalTaxes">$0.00</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-card__label">Total Fees</div>
+                        <div class="summary-card__value" id="totalFees">$0.00</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-card__label">Total Contributions</div>
+                        <div class="summary-card__value" id="totalContributions">$0.00</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-card__label">Total Withdrawals</div>
+                        <div class="summary-card__value" id="totalWithdrawals">$0.00</div>
+                    </div>
+                    <div class="summary-card" id="depletionCard" style="display: none;">
+                        <div class="summary-card__label">Balance Depleted</div>
+                        <div class="summary-card__value" id="depletionYear">Year 0</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Section -->
+            <section class="charts-section">
+                <h2 class="section-title">Investment Growth</h2>
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h3 class="chart-title">Balance Over Time</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="balanceChart" role="img" aria-label="Line chart showing investment balance growth over time"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3 class="chart-title">Investment Breakdown</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="breakdownChart" role="img" aria-label="Doughnut chart showing investment composition breakdown"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Table -->
+            <section class="table-section">
+                <h2 class="section-title">Year-by-Year Breakdown</h2>
+                <div class="table-wrapper">
+                    <table class="results-table" id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>Opening Balance</th>
+                                <th>Interest Earned</th>
+                                <th>Taxes</th>
+                                <th>Fees Paid</th>
+                                <th>Contributions</th>
+                                <th>Withdrawals</th>
+                                <th>Closing Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Dynamic content -->
+                        </tbody>
+                        <tfoot>
+                            <tr class="totals-row">
+                                <td><strong>Totals</strong></td>
+                                <td id="totalOpeningBalance">$0.00</td>
+                                <td id="totalInterestTable">$0.00</td>
+                                <td id="totalTaxesTable">$0.00</td>
+                                <td id="totalFeesTable">$0.00</td>
+                                <td id="totalContributionsTable">$0.00</td>
+                                <td id="totalWithdrawalsTable">$0.00</td>
+                                <td id="totalClosingBalance">$0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- Comparison Tab Content -->
+        <div id="comparison-tab" class="tab-content hidden" role="tabpanel">
+            <div class="comparison-toolbar">
+                <button class="btn btn--primary" id="addScenarioBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add Scenario
+                </button>
+            </div>
+            <div class="comparison-container" id="scenariosContainer">
+                <!-- Scenario cards will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
